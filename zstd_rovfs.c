@@ -11,6 +11,9 @@
 ** References:
 ** - https://www.sqlite.org/capi3ref.html
 ** - https://www.sqlite.org/c3ref/constlist.html
+**
+** Run unit tests (python3+ctest): env -C build ctest -V
+** Reformat this file: cmake --build build --target pretty
 */
 #include <sqlite3ext.h>
 SQLITE_EXTENSION_INIT1
