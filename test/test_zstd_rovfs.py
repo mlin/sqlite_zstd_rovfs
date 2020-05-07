@@ -39,7 +39,7 @@ def chinook_file_zst(chinook_file):
 def test_chinook(tmpdir, chinook_file, chinook_file_zst):
     # digest the SQL dump
     rslt = subprocess.run(
-        f"sqlite3 :memory: -bail -cmd '.open --readonly file:{chinook_file}' -cmd .dump -cmd .exit | sha256sum",
+        f"sqlite3 :memory: -bail -cmd '.open file:{chinook_file}?mode=ro' -cmd .dump -cmd .exit | sha256sum",
         check=True,
         shell=True,
         cwd=tmpdir,
