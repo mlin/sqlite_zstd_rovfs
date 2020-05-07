@@ -46,7 +46,7 @@ import sqlite3
 conn = sqlite3.connect(":memory:")
 conn.enable_load_extension(True)
 conn.load_extension("build/zstd_rovfs.so")
-conn = sqlite3.connect("file:Chinook_Sqlite.sqlite.zst?mode=ro&vfs=zstd_ro")
+conn = sqlite3.connect("file:Chinook_Sqlite.sqlite.zst?mode=ro&vfs=zstd_ro", uri=True)
 for row in conn.execute("""
     select e.*, count(i.invoiceid) as 'Total Number of Sales'
     from employee as e

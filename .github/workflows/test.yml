@@ -1,0 +1,25 @@
+name: test
+on: [push, pull_request]
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        BUILD_TYPE: [Debug, Release]
+    steps:
+    - name: apt
+      run: sudo apt-get install -y sqlite3 libsqlite3-dev python3-setuptools
+    - uses: actions/checkout@v2
+    - uses: actions/checkout@v2
+      with:
+        repository: facebook/zstd
+        ref: v1.4.4
+        path: _zstd
+    - name: zstd
+      run: make -C _zstd -j$(nproc) && sudo make -C _zstd install
+    - name: compile
+      run: cmake -DCMAKE_BUILD_TYPE=${{ matrix.BUILD_TYPE }} -B build && cmake --build build
+    - name: pip
+      run: sudo pip3 install --system -r test/requirements.txt
+    - name: test
+      run: env -C build ctest -V

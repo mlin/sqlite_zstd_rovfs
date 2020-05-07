@@ -23,6 +23,7 @@ def chinook_file(tmpdir_factory):
     )
     return str(dn.join("Chinook_Sqlite.sqlite"))
 
+
 @pytest.fixture(scope="session")
 def chinook_file_zst(chinook_file):
     subprocess.run(
@@ -34,12 +35,13 @@ def chinook_file_zst(chinook_file):
         ],
         check=True,
     )
-    return chinook_file+".zst"
+    return chinook_file + ".zst"
+
 
 def test_chinook(tmpdir, chinook_file, chinook_file_zst):
     # digest the SQL dump
     rslt = subprocess.run(
-        f"sqlite3 :memory: -bail -cmd '.open --readonly file:{chinook_file}' -cmd .dump -cmd .exit | sha256sum",
+        f"sqlite3 :memory: -bail -cmd '.open file:{chinook_file}?mode=ro' -cmd .dump -cmd .exit | sha256sum",
         check=True,
         shell=True,
         cwd=tmpdir,
@@ -50,7 +52,7 @@ def test_chinook(tmpdir, chinook_file, chinook_file_zst):
 
     # dump from the compressed version
     rslt = subprocess.run(
-        f"sqlite3 :memory: -bail -cmd '.load {os.path.join(BUILD,'zstd_rovfs.so')}' -cmd '.open --readonly file:{chinook_file_zst}?vfs=zstd_ro' -cmd .dump -cmd .exit | sha256sum",
+        f"sqlite3 :memory: -bail -cmd '.load {os.path.join(BUILD,'zstd_rovfs.so')}' -cmd '.open file:{chinook_file_zst}?mode=ro&vfs=zstd_ro' -cmd .dump -cmd .exit | sha256sum",
         check=True,
         shell=True,
         cwd=tmpdir,
@@ -61,7 +63,7 @@ def test_chinook(tmpdir, chinook_file, chinook_file_zst):
 
     # attempt to read non-zstd file shouldn't crash:
     rslt = subprocess.run(
-        f"sqlite3 :memory: -bail -cmd '.load {os.path.join(BUILD,'zstd_rovfs.so')}' -cmd '.open --readonly file:{chinook_file}?vfs=zstd_ro' -cmd .dump -cmd .exit",
+        f"sqlite3 :memory: -bail -cmd '.load {os.path.join(BUILD,'zstd_rovfs.so')}' -cmd '.open file:{chinook_file}?mode=ro&vfs=zstd_ro' -cmd .dump -cmd .exit",
         check=True,
         shell=True,
         cwd=tmpdir,
@@ -78,14 +80,16 @@ def test_chinook(tmpdir, chinook_file, chinook_file_zst):
         cwd=tmpdir,
     )
 
-def test_python_load(chinook_file_zst):
-    con = sqlite3.connect(":memory:")
+
+def test_python_load(chinook_file, chinook_file_zst):
+    con = sqlite3.connect(f"file:{chinook_file}?mode=ro", uri=True)
+    expected = len(list(con.execute("select * from Employee")))
     con.enable_load_extension(True)
-    con.execute(f"select load_extension('{os.path.join(BUILD,'zstd_rovfs.so')}')")
-    con = sqlite3.connect(f"file:{chinook_file_zst}?vfs=zstd_ro&mode=ro")
-    assert len(list(con.execute("select * from Employee"))) == 8
+    con.load_extension(os.path.join(BUILD, "zstd_rovfs.so"))
+    con = sqlite3.connect(f"file:{chinook_file_zst}?mode=ro&vfs=zstd_ro", uri=True)
+    assert len(list(con.execute("select * from Employee"))) == expected
     with pytest.raises(sqlite3.OperationalError):
-        con = sqlite3.connect(f"file:bogus123?vfs=zstd_ro&mode=ro")
+        con = sqlite3.connect(f"file:bogus123?vfs=zstd_ro&mode=ro", uri=True)
 
 
-# black -l 100 test/test_zstd_rovfs.py 
+# black -l 100 test/test_zstd_rovfs.py
