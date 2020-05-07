@@ -7,9 +7,16 @@ jobs:
       matrix:
         BUILD_TYPE: [Debug, Release]
     steps:
-    - uses: actions/checkout@v2
     - name: apt
-      run: sudo apt-get install -y sqlite3 libsqlite3-dev zstd libzstd-dev
+      run: sudo apt-get install -y sqlite3 libsqlite3-dev
+    - uses: actions/checkout@v2
+    - uses: actions/checkout@v2
+      with:
+        repository: https://github.com/facebook/zstd.git
+        ref: v1.4.4
+        path: _zstd
+    - name: zstd
+      run: make -C _zstd -j$(nproc) && make -C _zstd install
     - name: compile
       run: cmake -DCMAKE_BUILD_TYPE=${{ matrix.BUILD_TYPE }} -B build && cmake --build build
     - name: pip
