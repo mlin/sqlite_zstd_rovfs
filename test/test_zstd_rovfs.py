@@ -50,7 +50,7 @@ def test_chinook(tmpdir, chinook_file, chinook_file_zst):
 
     # dump from the compressed version
     rslt = subprocess.run(
-        f"sqlite3 :memory: -bail -cmd '.load {os.path.join(BUILD,'zstd_rovfs.so')}' -cmd '.open --readonly file:{chinook_file_zst}?vfs=zstd_ro' -cmd .dump -cmd .exit | sha256sum",
+        f"sqlite3 :memory: -bail -cmd '.load {os.path.join(BUILD,'zstd_rovfs.so')}' -cmd '.open file:{chinook_file_zst}?mode=ro&vfs=zstd_ro' -cmd .dump -cmd .exit | sha256sum",
         check=True,
         shell=True,
         cwd=tmpdir,
@@ -61,7 +61,7 @@ def test_chinook(tmpdir, chinook_file, chinook_file_zst):
 
     # attempt to read non-zstd file shouldn't crash:
     rslt = subprocess.run(
-        f"sqlite3 :memory: -bail -cmd '.load {os.path.join(BUILD,'zstd_rovfs.so')}' -cmd '.open --readonly file:{chinook_file}?vfs=zstd_ro' -cmd .dump -cmd .exit",
+        f"sqlite3 :memory: -bail -cmd '.load {os.path.join(BUILD,'zstd_rovfs.so')}' -cmd '.open file:{chinook_file}?mode=ro&vfs=zstd_ro' -cmd .dump -cmd .exit",
         check=True,
         shell=True,
         cwd=tmpdir,
