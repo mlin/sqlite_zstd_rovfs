@@ -81,14 +81,15 @@ def test_chinook(tmpdir, chinook_file, chinook_file_zst):
     )
 
 
-def test_python_load(chinook_file_zst):
-    con = sqlite3.connect(":memory:")
+def test_python_load(chinook_file, chinook_file_zst):
+    con = sqlite3.connect(f"file:{chinook_file}?mode=ro", uri=True)
+    expected = len(list(con.execute("select * from Employee")))
     con.enable_load_extension(True)
     con.load_extension(os.path.join(BUILD,'zstd_rovfs.so'))
-    con = sqlite3.connect(f"file:{chinook_file_zst}?mode=ro&vfs=zstd_ro")
-    assert len(list(con.execute("select * from Employee"))) == 8
+    con = sqlite3.connect(f"file:{chinook_file_zst}?mode=ro&vfs=zstd_ro", uri=True)
+    assert len(list(con.execute("select * from Employee"))) == expected
     with pytest.raises(sqlite3.OperationalError):
-        con = sqlite3.connect(f"file:bogus123?vfs=zstd_ro&mode=ro")
+        con = sqlite3.connect(f"file:bogus123?vfs=zstd_ro&mode=ro", uri=True)
 
 
 # black -l 100 test/test_zstd_rovfs.py
