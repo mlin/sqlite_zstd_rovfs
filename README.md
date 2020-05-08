@@ -1,10 +1,12 @@
 # sqlite_zstd_rovfs
 
-This SQLite extension enables it to read a finalized database file that's been compressed in the [Zstandard seekable format](https://github.com/facebook/zstd/tree/v1.4.4/contrib/seekable_format). It decompresses database pages just-in-time in order to serve SQLite's read requests.
+This [SQLite extension](https://www.sqlite.org/vfs.html) enables it to read a finalized database file that's been compressed in the [Zstandard seekable format](https://github.com/facebook/zstd/tree/v1.4.4/contrib/seekable_format). It decompresses database pages on-the-fly in order to serve SQLite's read requests.
+
+![test](https://github.com/mlin/sqlite_zstd_rovfs/workflows/test/badge.svg?branch=master)
 
 ## Quick start
 
-Prerequisites: CMake >= 3.11 and modern packages for SQLite3 and Zstandard development (e.g. `apt install sqlite3 libsqlite3-dev zstd libzstd-dev`)
+Prerequisites: CMake >= 3.11; up-to-date packages for SQLite3 and Zstandard development (e.g. `apt install sqlite3 libsqlite3-dev zstd libzstd-dev`)
 
 Fetch source code and compile:
 
@@ -16,7 +18,7 @@ cmake -DCMAKE_BUILD_TYPE=Release -B build
 cmake --build build
 ```
 
-Download a ~1MB example database, compress it (with 4 KiB frame size and 4 threads), and confirm it decompresses identically:
+Download a ~1MB example database, compress it (with [4 KiB frame size](https://www.sqlite.org/pgszchng2016.html) and 4 threads), and confirm it decompresses identically:
 
 ```
 wget https://github.com/lerocha/chinook-database/raw/master/ChinookDatabase/DataSources/Chinook_Sqlite.sqlite
@@ -40,7 +42,7 @@ sqlite3 :memory: -bail \
 
 Or in Python:
 
-```
+```python
 python3 - << 'EOF'
 import sqlite3
 conn = sqlite3.connect(":memory:")
